@@ -4,10 +4,10 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "build": "tsc",
+  "start": "node dist/server.js",
+  "test": "echo \"No tests specified. Skipping...\""
+}
   "files": [
     "build"
   ],
