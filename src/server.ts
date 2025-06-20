@@ -149,6 +149,16 @@ app.delete("/mcp", async (req: Request, res: Response) => {
   );
 });
 
+// 👇 Root route to handle GET /
+app.get("/", (req: Request, res: Response) => {
+  res.send("✅ MCP Streamable HTTP Server is running. Use POST /mcp to interact.");
+});
+
+// ✅ Optional health check route
+app.get("/health", (req: Request, res: Response) => {
+  res.status(200).send("Healthy");
+});
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 setupServer()
