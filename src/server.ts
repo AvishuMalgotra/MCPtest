@@ -8,7 +8,8 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-// Tools
+// MCP Tools
+
 server.tool("get-chuck-joke", "Get a random Chuck Norris joke", async () => {
   const response = await fetch("https://api.chucknorris.io/jokes/random");
   const data = await response.json();
@@ -73,19 +74,20 @@ server.tool("get-dad-joke", "Get a random dad joke", async () => {
 });
 
 // Express app setup
+
 const app = express();
 app.use(express.json());
 
 const transport = new StreamableHTTPServerTransport({
-  sessionIdGenerator: undefined, // stateless
+  sessionIdGenerator: undefined,
 });
 
-// MCP route (streaming-compatible)
+// MCP Endpoint
+
 app.post("/mcp", async (req: Request, res: Response) => {
   console.log("📩 Received MCP request");
   try {
     await transport.handleRequest(req, res, req.body);
-    // Do NOT send or close res here — SDK handles streaming
   } catch (err) {
     console.error("❌ MCP error:", err);
     if (!res.headersSent) {
@@ -101,7 +103,8 @@ app.post("/mcp", async (req: Request, res: Response) => {
   }
 });
 
-// Optional: reject GET/DELETE
+// Reject GET/DELETE on /mcp
+
 app.get("/mcp", (req: Request, res: Response) => {
   res.status(405).json({
     jsonrpc: "2.0",
@@ -124,7 +127,8 @@ app.delete("/mcp", (req: Request, res: Response) => {
   });
 });
 
-// Joke on home route
+// Root route - HTML joke
+
 app.get("/", async (req: Request, res: Response) => {
   try {
     const jokeRes = await fetch("https://api.chucknorris.io/jokes/random");
@@ -166,18 +170,48 @@ app.get("/", async (req: Request, res: Response) => {
   }
 });
 
-// Optional health check
+// SSE endpoint - send joke every 10s
+
+app.get("/sse", async (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  const sendJoke = async () => {
+    try {
+      const response = await fetch("https://api.chucknorris.io/jokes/random");
+      const data = await response.json();
+      res.write(`data: ${data.value}\n\n`);
+    } catch {
+      res.write(`data: Error fetching joke\n\n`);
+    }
+  };
+
+  await sendJoke(); // immediate
+  const intervalId = setInterval(sendJoke, 10000); // every 10s
+
+  req.on("close", () => {
+    clearInterval(intervalId);
+    res.end();
+    console.log("🔌 Client disconnected from /sse");
+  });
+});
+
+// Health check route
+
 app.get("/health", (_req, res) => {
   res.status(200).send("Healthy");
 });
 
-// Start server after MCP setup
+// Start the server
+
 const PORT = process.env.PORT || 3000;
 server
   .connect(transport)
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`🚀 Server ready at http://localhost:${PORT}`);
+      console.log(`🚀 Server ready on http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
