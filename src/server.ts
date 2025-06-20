@@ -97,11 +97,12 @@ const transport: StreamableHTTPServerTransport =
     sessionIdGenerator: undefined, // set to undefined for stateless servers
   });
 
-// Setup routes for the server
+// Setup MCP server
 const setupServer = async () => {
   await server.connect(transport);
 };
 
+// MCP endpoint handlers
 app.post("/mcp", async (req: Request, res: Response) => {
   console.log("Received MCP request:", req.body);
   try {
@@ -129,8 +130,8 @@ app.get("/mcp", async (req: Request, res: Response) => {
       error: {
         code: -32000,
         message: "Method not allowed.",
+        id: null,
       },
-      id: null,
     })
   );
 });
@@ -143,15 +144,52 @@ app.delete("/mcp", async (req: Request, res: Response) => {
       error: {
         code: -32000,
         message: "Method not allowed.",
+        id: null,
       },
-      id: null,
     })
   );
 });
 
-// 👇 Root route to handle GET /
-app.get("/", (req: Request, res: Response) => {
-  res.send("✅ MCP Streamable HTTP Server is running. Use POST /mcp to interact.");
+// 🔥 Route for root / - shows a random Chuck Norris joke
+app.get("/", async (req: Request, res: Response) => {
+  try {
+    const response = await fetch("https://api.chucknorris.io/jokes/random");
+    const data = await response.json();
+    res.send(`
+      <html>
+        <head>
+          <title>Random Joke</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              background-color: #f4f4f4;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+            }
+            .joke-box {
+              background: #fff;
+              padding: 2rem;
+              border-radius: 10px;
+              box-shadow: 0 0 10px rgba(0,0,0,0.1);
+              max-width: 600px;
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="joke-box">
+            <h1>😂 Random Chuck Norris Joke</h1>
+            <p>${data.value}</p>
+          </div>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error("Failed to fetch joke:", err);
+    res.status(500).send("Failed to fetch a joke.");
+  }
 });
 
 // ✅ Optional health check route
