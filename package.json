@@ -1,20 +1,20 @@
 {
   "name": "mcp-streamable-http",
   "version": "1.0.0",
-  "main": "src/server.js",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-  "build": "tsc",
-  "start": "node dist/server.js",
-  "test": "echo \"No tests specified. Skipping...\""
-}
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "echo \"No tests specified. Skipping...\""
+  },
   "files": [
-    "build"
+    "dist"
   ],
   "bin": {
     "demo": "./dist/server.js"
   },
-  "keywords": [ ],
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
